@@ -9,6 +9,7 @@ import java.time.LocalTime;
 import java.time.Period;
 import java.time.format.DateTimeFormatter;
 import java.time.YearMonth;
+import java.util.regex.*;
 
 
 // Person Class
@@ -103,6 +104,7 @@ HashMap<String,Integer> visitorToStudent = new HashMap<>();
 static LinkedList<Visitor> listOfVisitors = new LinkedList<>();
 static LinkedList<String> WaitingList = new LinkedList<>();
 static LinkedList<Integer> Rooms = new LinkedList<>();
+Messing messout = new Messing();
 private String id;
 private double roomRent;
 private int roomNumber;
@@ -118,16 +120,93 @@ Fee Fee;
         this.roomNumber = 0;
         this.department = "Null";
     }
+//CNIC Check
+public boolean CNICcheck(String CNIC){
+    if(CNIC.length()==15){
+        if(CNIC.charAt(5)=='-' && CNIC.charAt(13)=='-'){
+            for(int i =0;i<CNIC.length();i++){
+                if(i==5 || i==13){
+                    continue;
+                }
+                if(!Character.isDigit(CNIC.charAt(i))){
+                    return false;
+                }
+            }
+            return true;
+    }
+    }
+        return false;
+}
+// Phone Number Check
+public boolean phoneCheck(String phoneNumber){
+if(phoneNumber.length()==11){
+    if(phoneNumber.charAt(0)=='0' && phoneNumber.charAt(1)=='3'){
+        for(int i =0;i<phoneNumber.length();i++){
+            if(!Character.isDigit(phoneNumber.charAt(i))){
+                return false;
+            }
+    }
+    return true;
+}
+}
+return false;
+}
+// Email Check
+public boolean emailCheck(String email){
+    String pattern = "^[A-Za-z0-9_]+@[A-Za-z]+\\.[A-Za-z]{2,}$";
+    Pattern p = Pattern.compile(pattern);
+    Matcher m = p.matcher(email);
+    if(m.matches()){
+        
+        return true;
+    }
+    else{
+        return false;
+    }
+}
 // Registering Student
     public void registerStudent(){
+        boolean check = false;
         System.out.println("Enter the Name : ");
         this.name = in.nextLine();
+        while(check==false){
         System.out.println("Enter the CNIC : (XXXXX-XXXXXXX-X) ");
         this.CNIC = in.nextLine();
-        System.out.println("Enter the Phone Number : ");
-        this.phoneNumber = in.nextLine();
-        System.out.println("Enter the Email : ");
-        this.email = in.nextLine();
+        if(CNICcheck(CNIC)){
+            check = true;
+        }
+        else{
+            System.out.print("\033[H\033[2J");
+            System.out.flush();
+            System.out.println("Invalid CNIC , Try Again");
+        }
+        }
+        while(check==true){
+            System.out.println("Enter the Phone Number : ");
+            this.phoneNumber = in.nextLine();
+            if(phoneCheck(phoneNumber)){
+                check = false;
+            }
+            else{
+                System.out.print("\033[H\033[2J");
+                System.out.flush();
+                System.out.println("Invalid Number, Try Again");
+            }
+        }
+        while(check==false){
+            System.out.println("Enter the Email : ");
+            this.email = in.nextLine();
+            if(emailCheck(email)){
+                check = true;
+            }
+            else{
+                System.out.print("\033[H\033[2J");
+                System.out.flush();
+                System.out.println("Invalid Email, Try Again");
+
+            }
+        }
+        
         System.out.println("Enter the Password : ");
         this.password = in.nextLine();
         System.out.print("\033[H\033[2J");
@@ -159,7 +238,7 @@ Fee Fee;
         Thread.sleep(2000);
         System.out.print("\033[H\033[2J");
         System.out.flush();
-        System.out.println("1.Apply For Accomodation\n2.File Complaint\n3.View Complaint Status\n4.Register Visitor\n5.View Room Details\n6.Check Fee Status\n7.Log Out");
+        System.out.println("1.Apply For Accomodation\n2.File Complaint\n3.View Complaint Status\n4.Register Visitor\n5.View Registered Visitors\n6.View Room Details\n7.Check Fee Status\n8.Mess Out\n9.Log Out");
         int choice = in.nextInt();
         in.nextLine();
         System.out.print("\033[H\033[2J");
@@ -177,12 +256,18 @@ Fee Fee;
             registerVisitor();
         }
         else if(choice==5){
-            viewRoomDetails();
+            displayVisitors();
         }
         else if(choice==6){
-            checkFeeStatus();
+            viewRoomDetails();
         }
         else if(choice==7){
+            checkFeeStatus();
+        }
+        else if(choice==8){
+            messout.messDaysOut();
+        }
+        else if(choice==9){
             login=false;
             return;
         }
@@ -264,28 +349,79 @@ Fee Fee;
     }
 // Complaint System
     public void fileComplaint() throws InterruptedException{
+        if(roomNumber==0){
+            System.out.println("You dont have any Accomadation against which Complaint is to be registered");
+
+        }
+        else{
         System.out.println("Enter your Complaint : ");
         String complaint = in.nextLine();
         Complaint newComplaint = new Complaint(complaint);
         listOfComplaints.add(newComplaint);
         System.out.println("Complaint Succesfully Filed Against ID : " + newComplaint.complaintID + " on " + newComplaint.date);
+        }
 
+    }
+// Display Of Visitors
+    public void displayVisitors(){
+        if(listOfVisitors.isEmpty()){
+            System.out.println("You have No Registered Visitors");
+        }
+        else{
+            System.out.println("The Following are Your Registered Visitors : ");
+            for(Visitor v : listOfVisitors){
+                System.out.println("**************************");
+                System.out.println("Name : " + v.name);
+                System.out.println("CNIC : " + v.CNIC);
+                System.out.println("Phone Number : " + v.phoneNumber);
+                System.out.println("Registered Against Room Number : " + visitorToStudent.get(v.CNIC));
+            }
+        }
     }
 // Registration Of Vistors
     public void registerVisitor(){
-        
-        System.out.println("Enter the Checkout Time (hh:mm am/pm) : ");
-        String checkout = in.nextLine();
-        Visitor visitor = new Visitor(checkout.toLowerCase());
-        System.out.println("Enter the Following Details : ");
-        System.out.print("Name : ");
-        visitor.name = in.nextLine();
-        System.out.print("\nCNIC : ");
-        visitor.CNIC = in.nextLine();
-        System.out.print("\nPhone Number : ");
-        visitor.phoneNumber = in.nextLine();
-        listOfVisitors.add(visitor);
-        visitorToStudent.put(visitor.CNIC, this.roomNumber);
+        if(roomNumber==0){
+            System.out.println("Visitors Cant be Registered As you are not alloted a room");
+        }
+        else{
+
+            System.out.println("Enter the Checkout Time (hh:mm am/pm) : ");
+            String checkout = in.nextLine();
+            Visitor visitor = new Visitor(checkout.toLowerCase());
+            System.out.println("Enter the Following Details : ");
+            boolean check = false;
+            System.out.println("Enter the Name : ");
+            visitor.name = in.nextLine();
+            while(check==false){
+            System.out.println("Enter the CNIC : (XXXXX-XXXXXXX-X) ");
+            visitor.CNIC = in.nextLine();
+            if(CNICcheck(visitor.CNIC)){
+            check = true;
+            }
+            else{
+            System.out.print("\033[H\033[2J");
+            System.out.flush();
+            System.out.println("Invalid CNIC , Try Again");
+            }
+            }
+            while(check==true){
+            System.out.println("Enter the Phone Number : ");
+            visitor.phoneNumber = in.nextLine();
+            if(phoneCheck(visitor.phoneNumber)){
+                check = false;
+            }
+            else{
+                System.out.print("\033[H\033[2J");
+                System.out.flush();
+                System.out.println("Invalid Number, Try Again");
+            }
+        }
+            listOfVisitors.add(visitor);
+            visitorToStudent.put(visitor.CNIC, this.roomNumber);
+            System.out.print("\033[H\033[2J");
+            System.out.flush();
+            System.out.println("Registration Successful");
+        }
     }
 // Check Room Details
     public void viewRoomDetails() throws InterruptedException{
@@ -308,11 +444,10 @@ Fee Fee;
         }
         double total =0;
         Fee bill = new Fee(roomRent);
-        Messing bill2 = new Messing();
         total+=bill.calculateFee();
-        total+=bill2.calculateBilling();
+        total+=messout.calculateBilling();
             System.out.println("Room Rent : " + bill.amount);
-            System.out.println("Messing Bill : " + bill2.calculateBilling());
+            System.out.println("Messing Bill : " + messout.calculateBilling());
             System.out.println("Total Bill : " + total);
             System.out.println("Due Date : " + bill.dueDate);
             System.out.println("Status : " + bill.isPaid);
